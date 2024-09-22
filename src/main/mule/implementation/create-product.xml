@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="create-product-sub-flow" doc:id="db50ca45-a512-4930-ba17-51f827356a75" >
+		<logger level="INFO" doc:name="Start Of Create Products Flow" doc:id="c10a0f5b-df67-4456-9a66-9a9b4d0dbafc" message="Start Of Create Products Flow" />
+		<ee:transform doc:name="Set Method and Path" doc:id="0068a720-8042-415a-8d76-56759579a732" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="method" ><![CDATA["POST"]]></ee:set-variable>
+				<ee:set-variable variableName="path" ><![CDATA[p('salesforce-sapi.createProductPath')]]></ee:set-variable>
+				<ee:set-variable variableName="productMapping" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+				<ee:set-variable variableName="currencyCode" ><![CDATA[%dw 2.0
+output application/java
+---
+attributes.queryParams.currencyCode]]></ee:set-variable>
+				<ee:set-variable variableName="operation" ><![CDATA["CREATE"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Call currency-conversion-sub-flow" doc:id="7bf475e8-e168-4a11-9325-c24905cb02d0" name="currency-conversion-sub-flow"/>
+		<flow-ref doc:name="Call Salesforce SAPI Common Requester" doc:id="c34645ab-de3c-412a-8027-c4bc2fce12fa" name="salesforce-sapi-request-common-flow"/>
+		<choice doc:name="Choice" doc:id="3c9f071c-a99d-4882-8540-618e73cb9ba4" >
+			<when expression="#[isEmpty(vars.errorPayload)]">
+				<ee:transform doc:name="Convert to Json" doc:id="6bac1bda-09a5-48ad-97f2-156f4cfefb28">
+			<ee:message>
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload
+]]></ee:set-payload>
+			
+</ee:message>
+		</ee:transform>
+			
+</when>
+			<otherwise >
+				<raise-error doc:name="Raise SFDC:CREATE_PRODUCTS_FAILED Error" doc:id="4651282d-29fe-4f27-b72a-c3ceb6603a58" type="SFDC:CREATE_PRODUCTS_FAILED" description="#[vars.errorPayload]" />
+			</otherwise>
+		
+</choice>
+		<logger level="INFO" doc:name="End Of Create Products Flow" doc:id="e6eebe17-d13a-4546-831b-f12d3400336b" message="End Of Create Products Flow"/>
+	</sub-flow>
+	
+	</mule>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <flow name="mule-product-pricing-papi-main">
+        <http:listener config-ref="mule-product-pricing-papi-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="mule-product-pricing-papi-config" />
+    </flow>
+    <flow name="put:\products\(productId)\update:application\json:mule-product-pricing-papi-config">
+        <flow-ref doc:name="Call update-product-sub-flow" doc:id="c08b6251-b358-4a8b-827d-564d1b1cc1bd" name="update-product-sub-flow" />
+    </flow>
+    <flow name="delete:\products\(productId)\delete:mule-product-pricing-papi-config">
+        <flow-ref doc:name="Call delete-product-sub-flow" doc:id="d990a8a1-0b8d-45e9-a2d3-d279af4fc414" name="delete-product-sub-flow" />
+    </flow>
+    <flow name="get:\healthcheck:mule-product-pricing-papi-config">
+        <flow-ref doc:name="Call health-check-sub-flow" doc:id="7c5805f6-f8e2-47d4-a4ac-1d0023433eca" name="health-check-sub-flow" />
+    </flow>
+    <flow name="get:\products:mule-product-pricing-papi-config">
+        <flow-ref doc:name="Call get-products-sub-flow" doc:id="ce49cb7e-3047-4577-bbcc-88c7a711d64f" name="get-products-sub-flow" />
+    </flow>
+    <flow name="post:\products\create:application\json:mule-product-pricing-papi-config">
+        <flow-ref doc:name="Call create-product-sub-flow" doc:id="f7dfb239-c16c-4529-b9db-e5e1d98e46ec" name="create-product-sub-flow" />
+    </flow>
+</mule>

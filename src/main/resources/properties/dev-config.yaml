@@ -1,0 +1,30 @@
+api:
+  id: "19941176"
+
+truststore:
+  path: "truststore.ts"
+  alias: "mule"
+
+keystore:
+  path: "keystore.jks"
+  alias: "mule"
+
+  
+salesforce-sapi:
+  host: "mule-salesforce-sapi.us-e2.cloudhub.io"
+  port: "443"
+
+currency-conversion-sapi:
+  host: "currency-exchange-api-v1.us-e2.cloudhub.io"
+  port: "443"
+    
+  
+max:
+  retry: "3"
+  time: "10000"
+  
+scheduler:
+  cron: "0 00 00 ? * *"
+  timeZone: "UTC"
+  
+   

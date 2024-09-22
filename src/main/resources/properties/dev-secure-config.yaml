@@ -1,0 +1,9 @@
+salesforce-sapi:
+  clientId: "![WW0hdB2OakBIDr/ORGuCSLC1/iGMqI72n/5cizfVEdgYxFUrVKOdhQ==]"
+  clientSecret: "![ECTeDRKN6V16L9uNB2fVP4o2jFBdE3mks/3Ly550VGrhLFWPWMbibQ==]"
+
+truststore:
+  password: "![4A1ss200M1PLXL5WKHUtUQ==]"
+
+keystore:
+  password: "![4A1ss200M1PLXL5WKHUtUQ==]"

@@ -1,0 +1,20 @@
+api:
+  name: "mule-product-pricing-papi"
+
+https:
+  host: "0.0.0.0"
+  port: "8082"
+  timeout: "120000"
+  
+salesforce-sapi:
+  basePath: "/api"
+  createProductPath: "/products/create" 
+  updateProductPath: "/products/{productId}/update"
+  deleteProductPath: "/products/{productId}/delete"
+  getProductPath: "/products"
+  healthCheck: "/healthcheck"
+  timeout: "120000"
+  httpRetryErrorCodes: "HTTP:CONNECTIVITY,HTTP:TIMEOUT,HTTP:INTERNAL_SERVER_ERROR"
+
+currency-conversion-sapi:
+  path: "/exchange"

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<error-handler name="global-error-handler" doc:id="a2c7c7f1-1ef1-4d58-833d-afeec467f499" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="4fee4c3f-de53-4789-89fc-3ec6238f213a" type="HTTP:UNAUTHORIZED">
+			<set-variable value="#[401]" doc:name="Set httpStatus" doc:id="942a2131-57cd-4a52-b1c9-3ed779d32e75" variableName="httpStatus"/>
+			<flow-ref doc:name="Call global-error-handler-transform-flow " doc:id="c6e0bb6e-181e-4f63-9907-5e6947272f17" name="global-error-handler-transform-flow"/>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="dd812f8c-344e-452d-b2a5-9c5be61d3741" type="HTTP:BAD_REQUEST">
+			<set-variable value="#[400]" doc:name="Set httpStatus" doc:id="3619b035-60c1-4870-a878-dce52890977b" variableName="httpStatus" />
+			<flow-ref doc:name="Call global-error-handler-transform-flow " doc:id="339bab7d-f262-4207-a663-3528a03846b0" name="global-error-handler-transform-flow" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="3b41c329-810e-49fe-a0ad-62227ba35f35" type="HTTP:RETRY_EXHAUSTED">
+			<set-variable value="#[500]" doc:name="Set httpStatus" doc:id="a3aaae7c-1a58-4ca1-81c4-bd24381c7769" variableName="httpStatus" />
+			<flow-ref doc:name="Call global-error-handler-transform-flow " doc:id="676d47ab-47d9-4444-8d6a-19186bf49360" name="global-error-handler-transform-flow" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="00473dd2-b443-4420-8eae-3f2bd02f368d" type="HTTP:CONNECTIVITY">
+			<set-variable value="#[500]" doc:name="httpStatus" doc:id="218c4e1c-629b-406b-a4d1-b40f3cfbdec4" variableName="httpStatus" />
+			<flow-ref doc:name="Call global-error-handler-transform-flow " doc:id="5c6cdecf-4054-4a5b-811e-694ffba0d52b" name="global-error-handler-transform-flow" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e387afd5-8739-41d0-9f62-652ce1c9527f" type="HTTP:TIMEOUT">
+			<set-variable value="#[500]" doc:name="Set httpStatus" doc:id="12c28d66-6bba-4827-b145-0f5c22d411e9" variableName="httpStatus" />
+			<flow-ref doc:name="Call global-error-handler-transform-flow " doc:id="db43fb37-b931-46e9-87a1-1441df515133" name="global-error-handler-transform-flow" />
+		</on-error-propagate>
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="47cc8a9c-a68b-4ae1-a0af-fffeac81630c" type="APIKIT:BAD_REQUEST">
+			<set-variable value="#[400]" doc:name="Set httpStatus" doc:id="8aa8a45e-55ed-4692-a9fc-93b19ac4818d" variableName="httpStatus"/>
+			<flow-ref doc:name="Call global-error-handler-transform-flow" doc:id="59399949-b1a9-4127-be13-56dec12c4435" name="global-error-handler-transform-flow"/>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="d4f98698-d16e-47f4-ac75-7da0c0ac1478" type="ANY">
+			<set-variable value="#[500]" doc:name="Set httpStatus" doc:id="3f40e5f2-4a52-43d3-941b-d17048c62fec" variableName="httpStatus" />
+			<flow-ref doc:name="Call global-error-handler-transform-flow " doc:id="effb901f-ec83-48f9-a0d1-da7d111a1170" name="global-error-handler-transform-flow" />
+		</on-error-propagate>
+	</error-handler>
+	<sub-flow name="global-error-handler-transform-flow" doc:id="94ba5db4-0e33-4a54-ad37-61087dc77dbf" >
+		<ee:transform doc:name="Error Transform" doc:id="f24f5220-b268-4487-86c2-274e2d3478b2" >
+			<ee:message >
+				<ee:set-payload resource="dwl/common-error-response.dwl" />
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>
