@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="update-product-sub-flow" doc:id="e8b6df5d-0a03-4275-9d4f-26377dafef54" >
+		<logger level="INFO" doc:name="Start Of Update Products Flow" doc:id="f605f050-c1f6-43d0-8a7c-ef6fa6aedb10" message="Start Of Update Products Flow" />
+		<ee:transform doc:name="Set Method and Path" doc:id="ce288a32-fdc9-47eb-bbba-89ab56b422cb" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="method" ><![CDATA["PUT"]]></ee:set-variable>
+				<ee:set-variable variableName="path" ><![CDATA[p('salesforce-sapi.updateProductPath')]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Call Salesforce SAPI Common Requester" doc:id="41c4f26d-bc49-4304-bd37-9caed4160e15" name="salesforce-sapi-request-common-flow" />
+		<choice doc:name="Choice" doc:id="05f084b6-fa9b-449c-9e71-48df91770a71" >
+			<when expression="#[isEmpty(vars.errorPayload)]" >
+				<ee:transform doc:name="Convert to Json" doc:id="77de1d2e-7b06-4a98-81bc-d7f11c23a05b" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<raise-error doc:name="Raise SFDC:UPDATE_PRODUCTS_FAILED Error" doc:id="cf65b39e-8519-43dd-b7a7-62afee2b38ce" type="SFDC:UPDATE_PRODUCTS_FAILED" description="#[vars.errorPayload]" />
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End Of Update Products Flow" doc:id="74c2f8ab-3bee-4684-8472-f7292d7624a5" message="End Of Update Products Flow" />
+	</sub-flow>
+</mule>

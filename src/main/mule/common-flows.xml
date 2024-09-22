@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="5283c30e-50e9-45ac-a087-69059bf1dc5e" entryTtl="1" entryTtlUnit="DAYS" expirationIntervalUnit="HOURS" />
+	<sub-flow name="salesforce-sapi-request-common-flow" doc:id="836429ee-d0c9-4089-b239-78f18adee6c9" >
+		<until-successful maxRetries="${max.retry}" doc:name="Retry" doc:id="ef338db9-96e7-4401-99ca-a1b01018fc40" millisBetweenRetries="${max.time}" >
+			<try doc:name="Try" doc:id="baf758c0-01c3-4f71-a564-ee38e8088404" >
+				<http:request method="#[vars.method]" doc:name="Call Salesforce SAPI" doc:id="dca2870a-1d1f-4842-a9d9-43d5cd752109" config-ref="HTTP_Salesforce_SAPI_Request" path="#[vars.path]" sendCorrelationId="ALWAYS">
+					<http:headers ><![CDATA[#[output application/java
+---
+{
+	'client-id' : p('secure::salesforce-sapi.clientId'),
+	'client-secret' : p('secure::salesforce-sapi.clientSecret'),
+	'x-correlation-id': attributes.headers.'x-correlation-id'
+}]]]></http:headers>
+					<http:uri-params ><![CDATA[#[%dw 2.0
+output application/json
+---
+if (!isEmpty(attributes.uriParams.productId)) {
+			productId: attributes.uriParams.productId 
+	}
+	else {}]]]></http:uri-params>
+					<http:query-params ><![CDATA[#[%dw 2.0
+output application/json skipNullOn="everywhere"
+---
+{
+	"limit": if (!isEmpty(attributes.queryParams.limit)) attributes.queryParams.limit else null,
+	"offset": if (!isEmpty(attributes.queryParams.offset)) attributes.queryParams.offset else null 
+}]]]></http:query-params>
+				</http:request>
+				<error-handler >
+					<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="91bdd730-8c57-475b-8fda-9ba6995b12d8" type="${salesforce-sapi.httpRetryErrorCodes}" >
+						<logger level="ERROR" doc:name="Log Error Occured" doc:id="9a7e3e6a-bde8-468c-8053-fb4de3679981" message='#["Recoverable Error Occured - Retrying"]' />
+					</on-error-propagate>
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="97e8e1f7-7c01-45df-8f75-3ba68e180320" type="ANY" >
+						<logger level="ERROR" doc:name="Log Error Occured" doc:id="c1bbe529-4cf5-444f-9aa0-98e3ea5abc38" message='#["Unrecoverable Error Occured"]' />
+						<set-variable value="#[error.muleMessage.payload default error.description]" doc:name="Error Payload" doc:id="5036743e-457b-490a-b912-3704fdb2ff40" variableName="errorPayload" />
+						<logger level="INFO" doc:name="Log Error" doc:id="e37f0fb0-b08b-43ab-a842-daa5cafabec3" message='#["Product Creation Error - " ++ error.description]' />
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</until-successful>
+	</sub-flow>
+	<flow name="currency-conversion-store-flow" doc:id="58852eb4-8a91-43c8-8d1d-cfd82680b4e3" >
+		<scheduler doc:name="Scheduler" doc:id="33ca0654-9bbc-4a57-9017-82a31e86cedf" >
+			<scheduling-strategy >
+				<cron expression="${scheduler.cron}" timeZone="${scheduler.timeZone}" />
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Start Of Currency Conversion Store Flow" doc:id="e677d84c-0893-4ff6-8054-a31aadc4970e" message="Start Of Currency Conversion Store Flow"/>
+		<http:request method="GET" doc:name="Currency Conversion Requester" doc:id="304adb17-7917-4375-a29c-86004318e5dc" config-ref="HTTP_Conversion_API_Request" path="${currency-conversion-sapi.path}" />
+		<os:store doc:name="Store Currency Rates" doc:id="4e2eac48-b294-45b2-98f1-08c31ea88e39" key="currencyRates" objectStore="Object_store">
+			<os:value ><![CDATA[#[%dw 2.0
+output application/java
+---
+payload.rates pluck (value, key) -> {currency: key, rate: value}]]]></os:value>
+		</os:store>
+		<logger level="INFO" doc:name="End Of Currency Conversion Store Flow" doc:id="949bcab0-773f-4433-b8c7-1788a35834af" message="End Of Currency Conversion Store Flow"/>
+	</flow>
+	<sub-flow name="currency-conversion-sub-flow" doc:id="662dabd9-bccf-401c-9c42-4f6184035010" >
+		<logger level="INFO" doc:name="Start Of Currency Conversion Flow" doc:id="b0ec2121-8d06-45c6-a8c1-fd8b9c724a25" message="Start Of Currency Conversion Flow" />
+		<os:retrieve doc:name="Retrieve Currency Rates" doc:id="992ef27c-f5e0-4898-bed8-af49a506f1b1" objectStore="Object_store" key="currencyRates"/>
+		<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;payload]" doc:name="Store Current Currency Rates" doc:id="07ab067a-e93c-4b24-abdd-ff51a6934779" variableName="currentCurrencyRates"/>
+		<ee:transform doc:name="Convert All Price to USD" doc:id="a87c3e0e-04b2-4323-b805-fa632b492669" >
+			<ee:message >
+				<ee:set-payload resource="dwl/convertCurrencyToUSD.dwl" />
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Convert to Requested Currency Code" doc:id="569f3575-c073-4e21-b0f5-e674035d696d" >
+			<ee:message >
+				<ee:set-payload resource="dwl/targetCurrencyConversion.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Of Currency Conversion Flow" doc:id="1d438551-8f61-4b38-9993-693b27a98fe7" message="End Of Currency Conversion Flow" />
+	</sub-flow>
+</mule>

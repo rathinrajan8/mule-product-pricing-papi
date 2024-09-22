@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="health-check-sub-flow" doc:id="7de4f99f-45d7-4567-8d4b-c6bc7565dbd2" >
+		<logger level="INFO" doc:name="Log Start Of Health Check Flow" doc:id="3d3caef9-0f5b-4e84-b4b2-f9d6546d3c8f" message="Start Of Health Check Flow"/>
+		<ee:transform doc:name="Set Method and Path" doc:id="e6391069-304a-4663-b8b1-12defab05277" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="method" ><![CDATA["GET"]]></ee:set-variable>
+				<ee:set-variable variableName="path" ><![CDATA[p('salesforce-sapi.healthCheck')]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Call salesforce-sapi-request-common-flow" doc:id="4d12ff38-a453-4fa2-9205-4698f7fe089b" name="salesforce-sapi-request-common-flow"/>
+		<ee:transform doc:name="Response" doc:id="a24c587c-c5e7-4139-9022-91c49773cc20" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"API Name": p('api.name'),
+	"Status": payload.Status
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log End Of Health Check Flow" doc:id="37270b24-7278-4430-a8b5-ff423022cc4c" message="Log End Of Health Check Flow"/>
+	</sub-flow>
+</mule>

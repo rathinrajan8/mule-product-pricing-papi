@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<sub-flow name="get-products-sub-flow" doc:id="055d5142-5e1a-4c74-a2dd-213e9c717b8a" >
+		<logger level="INFO" doc:name="Start Of Get Products Flow" doc:id="99bfa079-4f8a-4a69-821c-627861fbaa51" message="Start Of Get Products Flow" />
+		<ee:transform doc:name="Set Method, Path and Currency Code" doc:id="0852de8d-d282-474b-b751-03b4bdaefd5d">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="method"><![CDATA["GET"]]></ee:set-variable>
+				<ee:set-variable variableName="path"><![CDATA[p('salesforce-sapi.getProductPath')]]></ee:set-variable>
+				<ee:set-variable variableName="currencyCode" ><![CDATA[%dw 2.0
+output application/java
+---
+attributes.queryParams.currencyCode]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Call Salesforce SAPI Common Requester" doc:id="38ec9ed7-f2b0-4120-abba-ef8081a69f8f" name="salesforce-sapi-request-common-flow" />
+		<choice doc:name="Choice" doc:id="0783d468-890d-4e4e-b6e7-14ec953d7965">
+			<when expression="#[isEmpty(vars.errorPayload)]">
+				<ee:transform doc:name="Convert to Json" doc:id="904918a3-b822-4ae8-806c-0e78a5594126">
+			<ee:message>
+			</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="productMapping" ><![CDATA[%dw 2.0
+output application/json
+---
+payload
+]]></ee:set-variable>
+					</ee:variables>
+		</ee:transform>
+				<flow-ref doc:name="Call currency-conversion-sub-flow" doc:id="9f0b1f7b-5656-4b66-80df-78f24792b172" name="currency-conversion-sub-flow"/>
+			</when>
+			<otherwise>
+				<raise-error doc:name="Raise SFDC:RETRIEVE_PRODUCTS_FAILED Error" doc:id="060399fd-d907-4957-b4d8-ebbaabe6228c" type="SFDC:RETRIEVE_PRODUCTS_FAILED" description="#[vars.errorPayload]" />
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End Of Get Products Flow" doc:id="978c02c1-51f7-4606-91e3-e5b5c37818de" message="End Of Get Products Flow" />
+	</sub-flow>
+</mule>
