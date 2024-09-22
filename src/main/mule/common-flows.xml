@@ -28,10 +28,16 @@ if (!isEmpty(attributes.uriParams.productId)) {
 					<http:query-params ><![CDATA[#[%dw 2.0
 output application/json skipNullOn="everywhere"
 ---
+(if ((!isEmpty(attributes.queryParams.limit)) and ((!isEmpty(attributes.queryParams.offset)))   )
+
 {
-	"limit": if (!isEmpty(attributes.queryParams.limit)) attributes.queryParams.limit else null,
-	"offset": if (!isEmpty(attributes.queryParams.offset)) attributes.queryParams.offset else null 
-}]]]></http:query-params>
+	"limit":  attributes.queryParams.limit ,
+	"offset":  attributes.queryParams.offset  
+}
+else
+{
+
+})]]]></http:query-params>
 				</http:request>
 				<error-handler >
 					<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="91bdd730-8c57-475b-8fda-9ba6995b12d8" type="${salesforce-sapi.httpRetryErrorCodes}" >
